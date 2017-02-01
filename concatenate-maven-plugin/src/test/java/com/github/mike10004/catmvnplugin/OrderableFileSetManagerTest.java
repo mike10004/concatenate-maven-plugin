@@ -8,6 +8,10 @@ package com.github.mike10004.catmvnplugin;
 import com.github.mike10004.catmvnplugin.OrderableFileSet.OrderingStrategy;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
+import com.google.common.io.Files;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.maven.shared.model.fileset.FileSet;
+import org.apache.maven.shared.model.fileset.util.FileSetManager;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -83,6 +87,38 @@ public class OrderableFileSetManagerTest {
         System.out.println();
         actual.forEach(System.out::println);
         assertEquals("expect file list in order of includes", includes, actual);
+    }
 
+    @Test
+    public void implicitIncludes_demonstateTraditionalBehavior() throws Exception {
+        testImplicitIncludes(new FileSet(), new FileSetManager());
+    }
+
+    @Test
+    public void implicitIncludes_orderableManager() throws Exception {
+        testImplicitIncludes(new FileSet(), new OrderableFileSetManager());
+    }
+
+    @Test
+    public void implicitIncludes_orderableSetAndOrderableManager() throws Exception {
+        testImplicitIncludes(new OrderableFileSet(), new OrderableFileSetManager());
+    }
+
+    @Test
+    public void implicitIncludes_orderableSet() throws Exception {
+        testImplicitIncludes(new OrderableFileSet(), new FileSetManager());
+    }
+
+    private void testImplicitIncludes(FileSet fileset, FileSetManager fsm) throws Exception {
+        File file = temporaryFolder.newFile();
+        Files.touch(file);
+        fileset.setDirectory(temporaryFolder.getRoot().getAbsolutePath());
+        String[] includedFiles = fsm.getIncludedFiles(fileset);
+        System.out.format("included files: %s%n", Arrays.toString(includedFiles));
+        assertEquals("included files count", 1, includedFiles.length);
+        String[] includedDirs = fsm.getIncludedDirectories(fileset);
+        System.out.format("included dirs: %s%n", Arrays.toString(Stream.of(includedDirs).map(dir -> "\"" + StringEscapeUtils.escapeJava(dir) + "\"").toArray()));
+        assertEquals("included dirs count", 1, includedDirs.length);
+        assertEquals("included dir", "", includedDirs[0]);
     }
 }

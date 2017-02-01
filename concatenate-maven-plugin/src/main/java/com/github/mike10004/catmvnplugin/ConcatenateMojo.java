@@ -5,7 +5,11 @@
  */
 package com.github.mike10004.catmvnplugin;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -14,6 +18,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.shared.model.fileset.FileSet;
 import org.apache.maven.shared.model.fileset.util.FileSetManager;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,12 +26,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.stream.Stream;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Mojo(name = "cat", defaultPhase = LifecyclePhase.PREPARE_PACKAGE)
 @NotThreadSafe
@@ -50,6 +58,14 @@ public class ConcatenateMojo extends org.apache.maven.plugin.AbstractMojo {
     @Parameter(defaultValue = "repeat")
     private RepeatedFileStrategy repeatedFileStrategy = RepeatedFileStrategy.repeat;
 
+    @Parameter
+    private String divider = "";
+
+    private static final String DEFAULT_DIVIDER_CHARSET = "${project.build.sourceEncoding}";
+
+    @Parameter(defaultValue=DEFAULT_DIVIDER_CHARSET)
+    private String dividerCharset;
+
     @SuppressWarnings("unused")
     public enum RepeatedFileStrategy {
         repeat,
@@ -70,6 +86,8 @@ public class ConcatenateMojo extends org.apache.maven.plugin.AbstractMojo {
         }
 
     }
+
+    @VisibleForTesting
     static class RepeatedItemException extends IllegalArgumentException {
         public RepeatedItemException(String s) {
             super(s);
@@ -88,7 +106,10 @@ public class ConcatenateMojo extends org.apache.maven.plugin.AbstractMojo {
 
     }
 
-    private static String toString(FileSet fileset) {
+    private static String describeFileset(@Nullable FileSet fileset) {
+        if (fileset == null) {
+            return "null";
+        }
         Map<String, Object> map = new HashMap<>();
         map.put("directory", fileset.getDirectory());
         map.put("includes", fileset.getIncludes());
@@ -112,20 +133,12 @@ public class ConcatenateMojo extends org.apache.maven.plugin.AbstractMojo {
             OrderableFileSet fileset = sources[i];
             String filesetDir = fileset.getDirectory();
             if (filesetDir == null) {
-                throw new MojoExecutionException("fileset directory not set on fileset at index " + i + ": " + toString(fileset));
+                throw new MojoExecutionException("fileset directory not set on fileset at index " + i + ": " + describeFileset(fileset));
             }
             File parent = new File(filesetDir);
-            String[] includedDirs = fileSetManager.getIncludedDirectories( fileset );
-            if (includedDirs != null && includedDirs.length > 0) {
-                throw new MojoExecutionException("included directories are not supported");
-            }
-            String[] excludedDirs = fileSetManager.getExcludedDirectories( fileset );
-            if (excludedDirs != null && excludedDirs.length > 0) {
-                throw new MojoExecutionException("excluded directories are not yet supported");
-            }
             String[] includedFiles = fileSetManager.getIncludedFiles( fileset );
             if (!fileset.isIgnoreEmptyIncludedFilesList() && includedFiles.length == 0) {
-                throw new MojoExecutionException("fileset at index " + i + " did not yield any files: " + toString(fileset));
+                throw new NoYieldFromFileSetException(fileset, i);
             }
             Stream.of(includedFiles).forEach(p -> {
                 File file = new File(parent, p);
@@ -136,7 +149,7 @@ public class ConcatenateMojo extends org.apache.maven.plugin.AbstractMojo {
             });
         }
         if (!ignoreEmptySourcesList && sourceFiles.isEmpty()) {
-            throw new MojoExecutionException("filesets did not yield any files; set ignoreEmptySourceList flag to true if this should be ignored");
+            throw new NoYieldFromAnyFilesetsException();
         }
         try {
             writeConcatenated(sourceFiles);
@@ -145,18 +158,52 @@ public class ConcatenateMojo extends org.apache.maven.plugin.AbstractMojo {
         }
     }
 
+    @VisibleForTesting
+    static class NoYieldFromFileSetException extends MojoExecutionException {
+        public NoYieldFromFileSetException(FileSet fileset, int i) {
+            super("fileset at index " + i + " did not yield any files: " + describeFileset(fileset));
+        }
+    }
+
+    static class NoYieldFromAnyFilesetsException extends MojoExecutionException {
+        public NoYieldFromAnyFilesetsException() {
+            super("filesets did not yield any files; set ignoreEmptySourceList flag to true if this should be ignored");
+        }
+    }
+
+    protected Charset getDividerCharset() {
+        final Charset charset;
+        if (Strings.isNullOrEmpty(dividerCharset) || DEFAULT_DIVIDER_CHARSET.equals(dividerCharset)) {
+            charset = Charset.defaultCharset();
+            if (!Strings.isNullOrEmpty(divider)) {
+                getLog().warn("using default charset for divider: " + charset.name() + "; set project.build.sourceEncoding property in pom or explicitly set <dividerCharset> parameter");
+            }
+        } else {
+            charset = Charset.forName(dividerCharset.toUpperCase());
+        }
+        return charset;
+    }
+
     protected void writeConcatenated(Iterable<File> sourceFiles) throws IOException {
+        byte[] dividerBytes = Strings.nullToEmpty(divider).getBytes(getDividerCharset());
         if (outputFile == null) {
             throw new IllegalStateException("output file not set");
         }
         Files.createParentDirs(outputFile);
+        int numFiles = 0;
         try (OutputStream output = new FileOutputStream(outputFile)) {
             for (File sourceFile : sourceFiles) {
-                try (InputStream input = new FileInputStream(sourceFile)) {
-                    org.apache.commons.io.IOUtils.copy(input, output);
+                if (numFiles > 0 && dividerBytes.length > 0) {
+                    output.write(dividerBytes);
                 }
+                try (InputStream input = new FileInputStream(sourceFile)) {
+                    ByteStreams.copy(input, output);
+                }
+                numFiles++;
             }
         }
+        getLog().info(String.format("concatenated %d file(s) to %s%s%s", numFiles,
+                StringUtils.abbreviateMiddle(outputFile.getParent(), "...", 64), File.separator, outputFile.getName()));
     }
 
     void setSources(OrderableFileSet[] sources) {
@@ -213,5 +260,13 @@ public class ConcatenateMojo extends org.apache.maven.plugin.AbstractMojo {
 
     void setIgnoreEmptySourcesList(boolean ignoreEmptySourcesList) {
         this.ignoreEmptySourcesList = ignoreEmptySourcesList;
+    }
+
+    void setDivider(String divider) {
+        this.divider = checkNotNull(divider);
+    }
+
+    void setDividerCharset(String dividerCharset) {
+        this.dividerCharset = dividerCharset;
     }
 }

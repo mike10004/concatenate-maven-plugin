@@ -101,7 +101,11 @@ public class OrderableFileSetManager extends FileSetManager
             case traditional:
                 return superGetter.apply(fileSet);
             case strict:
-                return getIncludedFilesOrDirectoriesInIncludesOrder(fileSet, superGetter);
+                if (fileSet.getIncludes().isEmpty()) {
+                    return superGetter.apply(fileSet);
+                } else {
+                    return getIncludedFilesOrDirectoriesInIncludesOrder(fileSet, superGetter);
+                }
             default:
                 throw new IllegalArgumentException("bug: unhandled ordering strategy: " + strategy);
         }
