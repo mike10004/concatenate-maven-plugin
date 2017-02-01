@@ -41,7 +41,7 @@
             <plugin>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>concatenate-maven-plugin</artifactId>
-                <version>0.1-SNAPSHOT</version>
+                <version>${project.version}</version>
                 <executions>
                     <execution>
                         <id>single-file-test</id>
