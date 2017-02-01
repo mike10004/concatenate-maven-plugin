@@ -5,7 +5,9 @@ import com.github.mike10004.catmvnplugin.ConcatenateMojo.RepeatedItemException;
 import com.github.mike10004.catmvnplugin.OrderableFileSet.OrderingStrategy;
 import com.github.mike10004.catmvnplugin.OrderableFileSetManagerTest.TestCase;
 import com.github.mike10004.catmvnplugin.OrderableFileSetManagerTest.TestCaseCreator;
-import com.google.common.io.ByteSource;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.CharSource;
 import com.google.common.io.Files;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -17,16 +19,17 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class ConcatenateMojoTest {
 
@@ -52,9 +55,21 @@ public class ConcatenateMojoTest {
         mojo.setSources(new OrderableFileSet[]{fileset});
         mojo.execute();
         String outputText = Files.toString(outputFile, charset);
-        String expectedOutputText = ByteSource.concat(Stream.of(someFile1, someFile2).sorted().map(Files::asByteSource).collect(Collectors.toList()))
-                .asCharSource(charset).read();
-        assertEquals("concatenated output", expectedOutputText, outputText);
+        Collection<List<File>> permutationsOfInputFiles = Collections2.permutations(ImmutableList.of(someFile1, someFile2));
+        Set<String> possibleOutputs = permutationsOfInputFiles.stream()
+                .map(files -> files.stream().map(file -> Files.asCharSource(file, charset)))
+                .map(charSources -> CharSource.concat(charSources.collect(Collectors.toList())))
+                .map(ConcatenateMojoTest::readUnchecked)
+                .collect(Collectors.toSet());
+        assertTrue("concatenated output not equal to any of expected outputs: " + outputText, possibleOutputs.contains(outputText));
+    }
+
+    private static String readUnchecked(CharSource charSource) {
+        try {
+            return charSource.read();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
