@@ -1,3 +1,7 @@
+[![Travis build status](https://travis-ci.org/mike10004/concatenate-maven-plugin.svg?branch=master)](https://travis-ci.org/mike10004/concatenate-maven-plugin)
+[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/ivrio01k770ctkxb?svg=true)](https://ci.appveyor.com/project/mike10004/concatenate-maven-plugin)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.mike10004/concatenate-maven-plugin.svg)](https://repo1.maven.org/maven2/com/github/mike10004/concatenate-maven-plugin/)
+
 concatentate-maven-plugin
 =========================
 
@@ -12,7 +16,7 @@ Basic usage is like this:
     <plugin>
         <groupId>com.github.mike10004</groupId>
         <artifactId>concatenate-maven-plugin</artifactId>
-        <version>0.1</version>
+        <version>0.2</version>
         <executions>
             <execution>
                 <id>concatenate-css-files</id>
