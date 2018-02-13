@@ -1,5 +1,5 @@
 package com.github.mike10004.catmvnplugin.tests;/*
- * (c) 2017 Novetta
+ * (c) 2017 Mike Chaberski
  *
  * Created by mike
  */
