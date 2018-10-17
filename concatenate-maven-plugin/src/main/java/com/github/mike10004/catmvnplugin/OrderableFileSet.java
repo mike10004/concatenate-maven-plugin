@@ -1,8 +1,3 @@
-/*
- * (c) 2017 Mike Chaberski
- *
- * Created by mike
- */
 package com.github.mike10004.catmvnplugin;
 
 import org.apache.maven.shared.model.fileset.FileSet;
