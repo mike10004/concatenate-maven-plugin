@@ -9,7 +9,7 @@
          sync between the parent, plugin, and test projects. -->
     <groupId>com.github.mike10004</groupId>
     <artifactId>concatenate-maven-plugin</artifactId>
-    <version>0.2</version>
+    <version>0.3-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
     <name>concatenate-maven-plugin</name>
     <url>https://github.com/mike10004/concatenate-maven-plugin</url>
@@ -200,9 +200,8 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>20.0</version>
+            <version>26.0-jre</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
-
-
 </project>
