@@ -24,7 +24,6 @@
             <plugins>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.19.1</version>
                     <configuration>
                         <systemPropertyVariables>
                             <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
