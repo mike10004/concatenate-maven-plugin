@@ -7,7 +7,7 @@ package com.github.mike10004.catmvnplugin;
 
 import org.apache.maven.shared.model.fileset.FileSet;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 public class OrderableFileSet extends FileSet {
 
@@ -27,7 +27,7 @@ public class OrderableFileSet extends FileSet {
     }
 
     public void setOrderingStrategy(OrderingStrategy orderingStrategy) {
-        this.orderingStrategy = checkNotNull(orderingStrategy);
+        this.orderingStrategy = requireNonNull(orderingStrategy);
     }
 
     public boolean isIgnoreEmptyIncludedFilesList() {

@@ -142,7 +142,7 @@ public class OrderableFileSetManager extends FileSetManager
             String[] includedThings = getter.apply(fileset);
             expandedList.addAll(Arrays.asList(includedThings));
         });
-        return expandedList.stream().toArray(String[]::new);
+        return expandedList.toArray(new String[0]);
     }
 
     /**

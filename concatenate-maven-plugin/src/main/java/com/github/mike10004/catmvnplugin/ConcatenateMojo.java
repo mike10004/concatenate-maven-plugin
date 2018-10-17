@@ -5,10 +5,6 @@
  */
 package com.github.mike10004.catmvnplugin;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -34,10 +30,11 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 @Mojo(name = "cat", defaultPhase = LifecyclePhase.PREPARE_PACKAGE)
 @NotThreadSafe
+@SuppressWarnings("WeakerAccess")
 public class ConcatenateMojo extends org.apache.maven.plugin.AbstractMojo {
 
     @SuppressWarnings({"MismatchedReadAndWriteOfArray", "unused"})
@@ -87,7 +84,6 @@ public class ConcatenateMojo extends org.apache.maven.plugin.AbstractMojo {
 
     }
 
-    @VisibleForTesting
     static class RepeatedItemException extends IllegalArgumentException {
         public RepeatedItemException(String s) {
             super(s);
@@ -127,7 +123,6 @@ public class ConcatenateMojo extends org.apache.maven.plugin.AbstractMojo {
         }
         final Collection<File> sourceFiles = createBucket();
         FileSetManager fileSetManager = new OrderableFileSetManager();
-//        FileSetManager fileSetManager = new FileSetManager();
         getLog().debug(sources.length + " sources specified");
         for (int i = 0; i < sources.length; i++) {
             OrderableFileSet fileset = sources[i];
@@ -158,7 +153,6 @@ public class ConcatenateMojo extends org.apache.maven.plugin.AbstractMojo {
         }
     }
 
-    @VisibleForTesting
     static class NoYieldFromFileSetException extends MojoExecutionException {
         public NoYieldFromFileSetException(FileSet fileset, int i) {
             super("fileset at index " + i + " did not yield any files: " + describeFileset(fileset));
@@ -173,9 +167,9 @@ public class ConcatenateMojo extends org.apache.maven.plugin.AbstractMojo {
 
     protected Charset getDividerCharset() {
         final Charset charset;
-        if (Strings.isNullOrEmpty(dividerCharset) || DEFAULT_DIVIDER_CHARSET.equals(dividerCharset)) {
+        if (Guava.Strings.isNullOrEmpty(dividerCharset) || DEFAULT_DIVIDER_CHARSET.equals(dividerCharset)) {
             charset = Charset.defaultCharset();
-            if (!Strings.isNullOrEmpty(divider)) {
+            if (!Guava.Strings.isNullOrEmpty(divider)) {
                 getLog().warn("using default charset for divider: " + charset.name() + "; set project.build.sourceEncoding property in pom or explicitly set <dividerCharset> parameter");
             }
         } else {
@@ -185,11 +179,11 @@ public class ConcatenateMojo extends org.apache.maven.plugin.AbstractMojo {
     }
 
     protected void writeConcatenated(Iterable<File> sourceFiles) throws IOException {
-        byte[] dividerBytes = Strings.nullToEmpty(divider).getBytes(getDividerCharset());
+        byte[] dividerBytes = Guava.Strings.nullToEmpty(divider).getBytes(getDividerCharset());
         if (outputFile == null) {
             throw new IllegalStateException("output file not set");
         }
-        Files.createParentDirs(outputFile);
+        Guava.Files.createParentDirs(outputFile);
         int numFiles = 0;
         try (OutputStream output = new FileOutputStream(outputFile)) {
             for (File sourceFile : sourceFiles) {
@@ -197,7 +191,7 @@ public class ConcatenateMojo extends org.apache.maven.plugin.AbstractMojo {
                     output.write(dividerBytes);
                 }
                 try (InputStream input = new FileInputStream(sourceFile)) {
-                    ByteStreams.copy(input, output);
+                    Guava.ByteStreams.copy(input, output);
                 }
                 numFiles++;
             }
@@ -263,7 +257,7 @@ public class ConcatenateMojo extends org.apache.maven.plugin.AbstractMojo {
     }
 
     void setDivider(String divider) {
-        this.divider = checkNotNull(divider);
+        this.divider = requireNonNull(divider);
     }
 
     void setDividerCharset(String dividerCharset) {
