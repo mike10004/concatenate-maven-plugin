@@ -62,3 +62,12 @@ names of your files ahead of time, you can use the exec plugin and `cat`
 everything to wherever you want it. But if you need build-time file selection
 and cross-platform compatibility, this might help you.
 
+Deployment
+----------
+
+Run 
+
+    $ mvn deploy
+
+from the `concatenate-maven-plugin` child module directory instead of this
+parent directory.
