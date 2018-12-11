@@ -18,6 +18,7 @@
         <OrderingMultipleFilesetsTest.outputFile>${testProductDirectory}/OrderingMultipleFilesetsTest.txt</OrderingMultipleFilesetsTest.outputFile>
         <IgnoreRepeatedFileTest.outputFile>${testProductDirectory}/IgnoreRepeatedFileTest.txt</IgnoreRepeatedFileTest.outputFile>
         <OrderedIncludesListTest.outputFile>${testProductDirectory}/OrderedIncludesListTest.txt</OrderedIncludesListTest.outputFile>
+        <BinaryFilesTest.outputFile>${testProductDirectory}/BinaryFilesTest.bin</BinaryFilesTest.outputFile>
     </properties>
     <build>
         <pluginManagement>
@@ -27,10 +28,12 @@
                     <configuration>
                         <systemPropertyVariables>
                             <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
+                            <testInputFilesDirectory>${project.basedir}/src/test/input</testInputFilesDirectory>
                             <SingleFileTest.outputFile>${SingleFileTest.outputFile}</SingleFileTest.outputFile>
                             <IgnoreRepeatedFileTest.outputFile>${IgnoreRepeatedFileTest.outputFile}</IgnoreRepeatedFileTest.outputFile>
                             <OrderingMultipleFilesetsTest.outputFile>${OrderingMultipleFilesetsTest.outputFile}</OrderingMultipleFilesetsTest.outputFile>
                             <OrderedIncludesListTest.outputFile>${OrderedIncludesListTest.outputFile}</OrderedIncludesListTest.outputFile>
+                            <BinaryFilesTest.outputFile>${BinaryFilesTest.outputFile}</BinaryFilesTest.outputFile>
                         </systemPropertyVariables>
                     </configuration>
                 </plugin>
@@ -58,6 +61,24 @@
                                 </fileset>
                             </sources>
                             <outputFile>${SingleFileTest.outputFile}</outputFile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>binary-files-test</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>cat</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <fileset>
+                                    <directory>${project.basedir}/src/test/input</directory>
+                                    <includes>
+                                        <include>bin/x*</include>
+                                    </includes>
+                                </fileset>
+                            </sources>
+                            <outputFile>${BinaryFilesTest.outputFile}</outputFile>
                         </configuration>
                     </execution>
                     <execution>
