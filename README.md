@@ -16,7 +16,7 @@ Basic usage is like this:
     <plugin>
         <groupId>com.github.mike10004</groupId>
         <artifactId>concatenate-maven-plugin</artifactId>
-        <version>0.2</version>
+        <version>0.4</version>
         <executions>
             <execution>
                 <id>concatenate-css-files</id>
