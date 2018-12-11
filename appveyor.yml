@@ -6,5 +6,5 @@ build_script:
 
     mvn --version
 
-    mvn install --quiet --batch-mode
+    mvn install --batch-mode
 
