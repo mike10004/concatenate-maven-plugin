@@ -25,6 +25,7 @@ import org.apache.maven.shared.model.fileset.FileSet;
 import org.apache.maven.shared.model.fileset.util.FileSetManager;
 import org.codehaus.plexus.logging.Logger;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -67,16 +68,36 @@ public class OrderableFileSetManager extends FileSetManager
         super();
     }
 
-    protected OrderingStrategy getOrderingStrategy(FileSet fileSet) {
-        if (fileSet instanceof OrderableFileSet) {
-            OrderingStrategy strategy = ((OrderableFileSet)fileSet).getOrderingStrategy();
-            if (strategy == null) {
-                throw new IllegalArgumentException("ordered file set must have strategy set");
-            }
-            return strategy;
-        } else {
-            return OrderingStrategy.traditional;
+    @Nullable
+    protected OrderableFileSet.SortingStrategy getSortingStrategy(FileSet fileSet) {
+        return maybeGetProperty(fileSet, OrderableFileSet::getSort, null);
+    }
+
+    /**
+     * Gets a value from an instance of a particular class only if the provided object is an instance of the class.
+     * @param valueHolder the object
+     * @param valueGetter function that gets the property value from an instance of {@code OrderableFileSet}
+     * @param defaultValue value to return if argument file set is not an instance of {@code OrderableFileSet}
+     * @param <S> type of the instance holding the value
+     * @param <T> type of value to be returned
+     * @return the value
+     */
+    private <S, T> T maybeGetProperty(Object valueHolder, Function<S, T> valueGetter, T defaultValue) {
+        try {
+            @SuppressWarnings("unchecked")
+            S orderableFileSet = (S) valueHolder;
+            return valueGetter.apply(orderableFileSet);
+        } catch (ClassCastException ignore) {
+            return defaultValue;
         }
+    }
+
+    protected OrderingStrategy getOrderingStrategy(FileSet fileSet) {
+        OrderingStrategy strategy = maybeGetProperty(fileSet, OrderableFileSet::getOrderingStrategy, OrderingStrategy.traditional);
+        if (strategy == null) {
+            throw new IllegalArgumentException("ordered file set must have strategy set");
+        }
+        return strategy;
     }
 
     /**
@@ -92,18 +113,26 @@ public class OrderableFileSetManager extends FileSetManager
 
     protected String[] getIncludedFilesOrDirectories( FileSet fileSet, Function<FileSet, String[]> superGetter ) {
         OrderingStrategy strategy = getOrderingStrategy(fileSet);
+        final String[] includedFilesAndDirectories;
         switch (strategy) {
             case traditional:
-                return superGetter.apply(fileSet);
+                includedFilesAndDirectories = superGetter.apply(fileSet);
+                break;
             case strict:
                 if (fileSet.getIncludes().isEmpty()) {
-                    return superGetter.apply(fileSet);
+                    includedFilesAndDirectories = superGetter.apply(fileSet);
                 } else {
-                    return getIncludedFilesOrDirectoriesInIncludesOrder(fileSet, superGetter);
+                    includedFilesAndDirectories = getIncludedFilesOrDirectoriesInIncludesOrder(fileSet, superGetter);
                 }
+                break;
             default:
                 throw new IllegalArgumentException("bug: unhandled ordering strategy: " + strategy);
         }
+        OrderableFileSet.SortingStrategy sortingStrategy = getSortingStrategy(fileSet);
+        if (sortingStrategy != null) {
+            Arrays.sort(includedFilesAndDirectories, sortingStrategy.getComparator());
+        }
+        return includedFilesAndDirectories;
     }
 
     private static FileSet cloneExceptIncludes(FileSet source) {

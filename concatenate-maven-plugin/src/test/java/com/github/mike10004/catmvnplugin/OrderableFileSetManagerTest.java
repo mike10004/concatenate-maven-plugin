@@ -18,10 +18,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 public class OrderableFileSetManagerTest {
@@ -115,5 +117,18 @@ public class OrderableFileSetManagerTest {
         System.out.format("included dirs: %s%n", Arrays.toString(Stream.of(includedDirs).map(dir -> "\"" + StringEscapeUtils.escapeJava(dir) + "\"").toArray()));
         assertEquals("included dirs count", 1, includedDirs.length);
         assertEquals("included dir", "", includedDirs[0]);
+    }
+
+    @Test
+    public void alphabeticalSortingStrategy() {
+        OrderableFileSetManager mgr = new OrderableFileSetManager();
+        OrderableFileSet fileSet = new OrderableFileSet();
+        String[] outOfOrderItems = new String[]{"b", "a", "c"};
+        Function<FileSet, String[]> fileLister = x -> Arrays.copyOf(outOfOrderItems, outOfOrderItems.length);
+        String[] result = mgr.getIncludedFilesOrDirectories(fileSet, fileLister);
+        assertArrayEquals(outOfOrderItems, result);
+        fileSet.setSort(OrderableFileSet.SortingStrategy.alphabetical);
+        result = mgr.getIncludedFilesOrDirectories(fileSet, fileLister);
+        assertArrayEquals(new String[]{"a", "b", "c"}, result);
     }
 }
