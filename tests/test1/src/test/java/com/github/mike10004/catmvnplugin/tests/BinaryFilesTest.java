@@ -13,7 +13,7 @@ public class BinaryFilesTest extends CatTestBase {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Test
-    public void concatenate_orderingStrategyStrict() throws Exception {
+    public void concatenateBinaryFiles() throws Exception {
         byte[] expected = Files.asByteSource(getTestInputFile("cat.jpg")).read();
         byte[] actual = Files.asByteSource(getOutputFile()).read();
         assertArrayEquals("output", expected, actual);

@@ -19,6 +19,7 @@
         <IgnoreRepeatedFileTest.outputFile>${testProductDirectory}/IgnoreRepeatedFileTest.txt</IgnoreRepeatedFileTest.outputFile>
         <OrderedIncludesListTest.outputFile>${testProductDirectory}/OrderedIncludesListTest.txt</OrderedIncludesListTest.outputFile>
         <BinaryFilesTest.outputFile>${testProductDirectory}/BinaryFilesTest.bin</BinaryFilesTest.outputFile>
+        <AlphabeticalFilesTest.outputFile>${testProductDirectory}/AlphabeticalFilesTest.txt</AlphabeticalFilesTest.outputFile>
     </properties>
     <build>
         <pluginManagement>
@@ -34,6 +35,7 @@
                             <OrderingMultipleFilesetsTest.outputFile>${OrderingMultipleFilesetsTest.outputFile}</OrderingMultipleFilesetsTest.outputFile>
                             <OrderedIncludesListTest.outputFile>${OrderedIncludesListTest.outputFile}</OrderedIncludesListTest.outputFile>
                             <BinaryFilesTest.outputFile>${BinaryFilesTest.outputFile}</BinaryFilesTest.outputFile>
+                            <AlphabeticalFilesTest.outputFile>${AlphabeticalFilesTest.outputFile}</AlphabeticalFilesTest.outputFile>
                         </systemPropertyVariables>
                     </configuration>
                 </plugin>
@@ -80,6 +82,28 @@
                                 </fileset>
                             </sources>
                             <outputFile>${BinaryFilesTest.outputFile}</outputFile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>alphabetical-files-test</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>cat</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <fileset>
+                                    <directory>${project.basedir}/src/test/input</directory>
+                                    <orderingStrategy>strict</orderingStrategy>
+                                    <sort>alphabetical</sort>
+                                    <includes>
+                                        <include>alpha/b.txt</include>
+                                        <include>alpha/a.txt</include>
+                                        <include>alpha/c.txt</include>
+                                    </includes>
+                                </fileset>
+                            </sources>
+                            <outputFile>${AlphabeticalFilesTest.outputFile}</outputFile>
                         </configuration>
                     </execution>
                     <execution>
