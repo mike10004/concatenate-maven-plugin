@@ -73,6 +73,7 @@
                             <sources>
                                 <fileset>
                                     <directory>${project.basedir}/src/test/input</directory>
+                                    <sort>alphabetical</sort>
                                     <includes>
                                         <include>bin/x*</include>
                                     </includes>
