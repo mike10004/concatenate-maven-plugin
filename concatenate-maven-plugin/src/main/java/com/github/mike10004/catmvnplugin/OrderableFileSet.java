@@ -4,6 +4,7 @@ import org.apache.maven.shared.model.fileset.FileSet;
 
 import javax.annotation.Nullable;
 
+import java.util.Arrays;
 import java.util.Comparator;
 
 import static java.util.Objects.requireNonNull;
@@ -27,9 +28,23 @@ public class OrderableFileSet extends FileSet {
 
     public enum SortingStrategy {
 
+        /**
+         * Do not sort included files and directories.
+         */
+        none,
+
+        /**
+         * Sort included files and directories by pathname.
+         */
         alphabetical;
 
-        public Comparator<String> getComparator() {
+        public void sort(String[] items) {
+            if (this != none) {
+                Arrays.sort(items, getComparator());
+            }
+        }
+
+        private Comparator<String> getComparator() {
             switch (this) {
                 case alphabetical:
                     return String::compareTo;

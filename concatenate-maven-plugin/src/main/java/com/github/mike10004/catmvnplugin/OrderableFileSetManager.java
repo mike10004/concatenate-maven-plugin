@@ -130,7 +130,7 @@ public class OrderableFileSetManager extends FileSetManager
         }
         OrderableFileSet.SortingStrategy sortingStrategy = getSortingStrategy(fileSet);
         if (sortingStrategy != null) {
-            Arrays.sort(includedFilesAndDirectories, sortingStrategy.getComparator());
+            sortingStrategy.sort(includedFilesAndDirectories);
         }
         return includedFilesAndDirectories;
     }
