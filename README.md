@@ -29,6 +29,7 @@ Basic usage is like this:
                         <fileset>
                             <directory>${project.basedir}/src/main/parts</directory>
                             <orderingStrategy>strict</orderingStrategy>
+                            <sort>none</sort> <!-- this is the default -->
                             <includes>
                                 <include>head.txt</include>
                                 <include>body*.txt</include>
@@ -52,15 +53,29 @@ them on a call to `java.io.File.list()`. Depending on your use case, this may
 be okay, and you can get a performance benefit out of omitting the ordering 
 strategy parameter.
 
-The Why
--------
+The other option for `<sort>` is `alphabetical`, and it overrides the `strict`
+ordering. Alphabetical sorting, if specified, is applied after the includes 
+have been collected, and the files are sorted by the pathname that starts with
+the `<directory>`.
+
+Why you might want this
+-----------------------
 
 There are a few plugins for concatenating and optimizing resource files, but
 none are dead simple. Most want to tool around in your classpath or obfuscate
 and compress the output. If you're always on Linux with Bash and you know the
-names of your files ahead of time, you can use the exec plugin and `cat` 
+names of your files ahead of time, you can use `exec-maven-plugin' and `cat` 
 everything to wherever you want it. But if you need build-time file selection
-and cross-platform compatibility, this might help you.
+and cross-platform compatibility, this plugin might help you.
+
+Running tests
+-------------
+
+To execute the tests in the projects in the `tests` folder, the full Maven 
+lifecycle up to the `test` phase must execute. The plugin is executed during
+the `process-test-resources` phase and the output is evaluated in the `test`
+phase. (Therefore, running the tests as unit tests in an IDE may fail if the
+IDE does not execute the preceding build phases.)
 
 Deployment
 ----------
