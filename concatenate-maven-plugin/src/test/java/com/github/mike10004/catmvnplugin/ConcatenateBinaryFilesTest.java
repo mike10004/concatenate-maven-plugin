@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
 
+import static com.google.common.base.Preconditions.checkState;
 import static org.junit.Assert.assertArrayEquals;
 
 public class ConcatenateBinaryFilesTest {
@@ -37,6 +38,7 @@ public class ConcatenateBinaryFilesTest {
         random.nextBytes(head);
         byte[] tail = new byte[64];
         random.nextBytes(tail);
+        checkState(!Arrays.equals(head, tail), "test sanity depends on head and tail arrays being unequal");
         byte[] expected = ArrayUtils.addAll(head, tail);
         Files.asByteSink(someFile1).write(head);
         Files.asByteSink(someFile2).write(tail);
