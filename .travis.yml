@@ -3,3 +3,5 @@ jdk:
   - openjdk8
 install: true
 script: mvn verify -B
+notifications:
+  email: false
