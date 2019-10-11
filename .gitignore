@@ -12,3 +12,7 @@ buildNumber.properties
 *.iml
 *.log
 
+.settings/
+.project
+.classpath
+.factorypath
